@@ -19,7 +19,7 @@ typedef struct State8080 {
   uint8_t e;
   uint8_t h;
   uint8_t l;
-  uint16_t w; //wz
+  uint16_t w;  // wz
   uint16_t sp;
   uint16_t pc;
   uint8_t* memory;
@@ -27,17 +27,15 @@ typedef struct State8080 {
   uint8_t int_enable;
 } State8080;
 
-uint8_t parity(int x, int size)
-{
-	int i;
-	int p = 0;
-	x = (x & ((1<<size)-1));  // 1 << 0xff = 0xfe; 0xfe - 1 = 0xfd
-	for (i=0; i<size; i++)
-	{
-		if (x & 0x1) p++;
-		x = x >> 1;
-	}
-	return (0 == (p & 0x1));
+uint8_t parity(int x, int size) {
+  int i;
+  int p = 0;
+  x = (x & ((1 << size) - 1));  // 1 << 0xff = 0xfe; 0xfe - 1 = 0xfd
+  for (i = 0; i < size; i++) {
+    if (x & 0x1) p++;
+    x = x >> 1;
+  }
+  return (0 == (p & 0x1));
 }
 
 void UnimplementedInstruction(State8080* state) {
@@ -47,6 +45,9 @@ void UnimplementedInstruction(State8080* state) {
 
 void Emulate8080p(State8080* state) {
   unsigned char* opcode = &state->memory[state->pc];
+  uint32_t result;
+
+  printf("%04x\n", state->pc);
 
   switch (*opcode) {
     case 0x00:
@@ -54,7 +55,7 @@ void Emulate8080p(State8080* state) {
     case 0x01:
       state->b = opcode[2];
       state->c = opcode[1];
-      state->pc+=2;
+      state->pc += 2;
       break;
     case 0x02:
       state->memory[(state->b << 8) | state->c] = state->a;
@@ -90,10 +91,10 @@ void Emulate8080p(State8080* state) {
       state->cc.cy = (state->w > 0xff);
       break;
     case 0x08:
-      UnimplementedInstruction(state);
       break;
     case 0x09:
-      uint32_t result = (uint32_t)((state->h << 8) + state->l) + (uint32_t)((state->b << 8) + state->c);
+      result = (uint32_t)((state->h << 8) + state->l) +
+               (uint32_t)((state->b << 8) + state->c);
 
       state->cc.cy = (result > 0xffff);
 
@@ -135,12 +136,11 @@ void Emulate8080p(State8080* state) {
       state->cc.cy = (state->w & 0xff == 1);
       break;
     case 0x10:
-      UnimplementedInstruction(state);
       break;
     case 0x11:
       state->d = opcode[2];
       state->e = opcode[1];
-      state->pc+=2;
+      state->pc += 2;
       break;
     case 0x12:
       state->memory[(state->d << 8) | state->e] = state->a;
@@ -176,10 +176,10 @@ void Emulate8080p(State8080* state) {
       state->cc.cy = (state->w > 0xff);
       break;
     case 0x18:
-      UnimplementedInstruction(state);
       break;
     case 0x19:
-      uint32_t result = (uint32_t)((state->h << 8) + state->l) + (uint32_t)((state->d << 8) + state->e);
+      result = (uint32_t)((state->h << 8) + state->l) +
+               (uint32_t)((state->d << 8) + state->e);
 
       state->cc.cy = (result > 0xffff);
 
@@ -221,17 +221,16 @@ void Emulate8080p(State8080* state) {
       state->cc.cy = (state->w & 0xff == 1);
       break;
     case 0x20:
-      UnimplementedInstruction(state);
       break;
     case 0x21:
       state->h = opcode[2];
       state->l = opcode[1];
-      state->pc+=2;
+      state->pc += 2;
       break;
     case 0x22:
       state->memory[(opcode[2] << 8) | opcode[1]] = state->l;
-      state->memory[((opcode[2] << 8) | opcode[1])+1] = state->h;
-      state->pc+=2;
+      state->memory[((opcode[2] << 8) | opcode[1]) + 1] = state->h;
+      state->pc += 2;
       break;
     case 0x23:
       state->h++;
@@ -257,8 +256,8 @@ void Emulate8080p(State8080* state) {
       break;
     case 0x27:
       state->w = state->a;
-      if(state->w & 0x0f > 9 || state->cc.ac) state->w += 6;
-      if(state->w >> 4 & 0x0f > 9 || state->cc.cy) state->w += 6 << 4;
+      if (state->w & 0x0f > 9 || state->cc.ac) state->w += 6;
+      if (state->w >> 4 & 0x0f > 9 || state->cc.cy) state->w += 6 << 4;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -268,10 +267,10 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x28:
-      UnimplementedInstruction(state);
       break;
     case 0x29:
-      uint32_t result = (uint32_t)((state->h << 8) + state->l) + (uint32_t)((state->h << 8) + state->l);
+      result = (uint32_t)((state->h << 8) + state->l) +
+               (uint32_t)((state->h << 8) + state->l);
 
       state->cc.cy = (result > 0xffff);
 
@@ -280,8 +279,8 @@ void Emulate8080p(State8080* state) {
       break;
     case 0x2a:
       state->l = state->memory[(opcode[2] << 8) | opcode[1]];
-      state->h = state->memory[((opcode[2] << 8) | opcode[1])+1];
-      state->pc+=2;
+      state->h = state->memory[((opcode[2] << 8) | opcode[1]) + 1];
+      state->pc += 2;
       break;
     case 0x2b:
       state->h--;
@@ -309,7 +308,6 @@ void Emulate8080p(State8080* state) {
       state->a = ~state->a;
       break;
     case 0x30:
-      UnimplementedInstruction(state);
       break;
     case 0x31:
       state->sp = (opcode[2] << 8) | opcode[1];
@@ -317,7 +315,7 @@ void Emulate8080p(State8080* state) {
       break;
     case 0x32:
       state->memory[(opcode[2] << 8) | opcode[1]] = state->a;
-      state->pc+=2;
+      state->pc += 2;
       break;
     case 0x33:
       state->sp++;
@@ -344,10 +342,9 @@ void Emulate8080p(State8080* state) {
       state->cc.cy = 1;
       break;
     case 0x38:
-      UnimplementedInstruction(state);
       break;
     case 0x39:
-      uint32_t result = (uint32_t)((state->h << 8) + state->l) + (uint32_t)state->sp;
+      result = (uint32_t)((state->h << 8) + state->l) + (uint32_t)state->sp;
 
       state->cc.cy = (result > 0xffff);
 
@@ -356,7 +353,7 @@ void Emulate8080p(State8080* state) {
       break;
     case 0x3a:
       state->a = state->memory[(opcode[2] << 8) | opcode[1]];
-      state->pc+=2;
+      state->pc += 2;
       break;
     case 0x3b:
       state->sp--;
@@ -635,7 +632,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x86:
-      state->w = (uint16_t)state->a + (uint16_t)state->memory[(state->h << 8) | state->l];
+      state->w = (uint16_t)state->a +
+                 (uint16_t)state->memory[(state->h << 8) | state->l];
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -655,7 +653,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x88:
-      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->b;
+      state->w =
+          (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->b;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -665,7 +664,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x89:
-      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->c;
+      state->w =
+          (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->c;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -675,7 +675,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x8a:
-      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->d;
+      state->w =
+          (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->d;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -685,7 +686,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x8b:
-      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->e;
+      state->w =
+          (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->e;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -695,7 +697,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x8c:
-      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->h;
+      state->w =
+          (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->h;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -705,7 +708,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x8d:
-      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->l;
+      state->w =
+          (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->l;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -715,7 +719,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x8e:
-      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->memory[(state->h << 8) | state->l];
+      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy +
+                 (uint16_t)state->memory[(state->h << 8) | state->l];
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -725,7 +730,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x8f:
-      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->a;
+      state->w =
+          (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->a;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -795,7 +801,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x96:
-      state->w = (uint16_t)state->a - (uint16_t)state->memory[(state->h << 8) | state->l];
+      state->w = (uint16_t)state->a -
+                 (uint16_t)state->memory[(state->h << 8) | state->l];
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -815,7 +822,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x98:
-      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->b;
+      state->w =
+          (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->b;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -825,7 +833,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x99:
-      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->c;
+      state->w =
+          (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->c;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -835,7 +844,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x9a:
-      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->d;
+      state->w =
+          (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->d;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -845,7 +855,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x9b:
-      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->e;
+      state->w =
+          (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->e;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -855,7 +866,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x9c:
-      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->h;
+      state->w =
+          (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->h;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -865,7 +877,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x9d:
-      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->l;
+      state->w =
+          (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->l;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -875,7 +888,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x9e:
-      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->memory[(state->h << 8) | state->l];
+      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy -
+                 (uint16_t)state->memory[(state->h << 8) | state->l];
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -885,7 +899,8 @@ void Emulate8080p(State8080* state) {
       state->a = state->w & 0xff;
       break;
     case 0x9f:
-      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->a;
+      state->w =
+          (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->a;
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -900,7 +915,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       break;
     case 0xa1:
       state->a &= state->c;
@@ -908,7 +923,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       break;
     case 0xa2:
       state->a &= state->d;
@@ -916,7 +931,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       break;
     case 0xa3:
       state->a &= state->e;
@@ -924,7 +939,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       break;
     case 0xa4:
       state->a &= state->h;
@@ -932,7 +947,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       break;
     case 0xa5:
       state->a &= state->l;
@@ -940,7 +955,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       break;
     case 0xa6:
       state->a &= state->memory[(state->h << 8) | state->l];
@@ -948,7 +963,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       break;
     case 0xa7:
       state->a &= state->a;
@@ -956,7 +971,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       break;
     case 0xa8:
       state->a ^= state->b;
@@ -964,7 +979,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xa9:
@@ -973,7 +988,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xaa:
@@ -982,7 +997,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xab:
@@ -991,7 +1006,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xac:
@@ -1000,7 +1015,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xad:
@@ -1009,7 +1024,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xae:
@@ -1018,7 +1033,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xaf:
@@ -1027,7 +1042,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xb0:
@@ -1036,7 +1051,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xb1:
@@ -1045,7 +1060,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xb2:
@@ -1054,7 +1069,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xb3:
@@ -1063,7 +1078,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xb4:
@@ -1072,7 +1087,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xb5:
@@ -1081,7 +1096,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xb6:
@@ -1090,7 +1105,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xb7:
@@ -1099,7 +1114,7 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
       break;
     case 0xb8:
@@ -1107,7 +1122,7 @@ void Emulate8080p(State8080* state) {
 
       state->cc.z = (state->w == state->b);
       state->cc.s = (state->w & !0x7f != 0);
-      state->cc.p = parity (state->w, 0xff);
+      state->cc.p = parity(state->w, 0xff);
       state->cc.cy = (state->w < state->b);
       break;
     case 0xb9:
@@ -1115,7 +1130,7 @@ void Emulate8080p(State8080* state) {
 
       state->cc.z = (state->w == state->c);
       state->cc.s = (state->w & !0x7f != 0);
-      state->cc.p = parity (state->w, 0xff);
+      state->cc.p = parity(state->w, 0xff);
       state->cc.cy = (state->w < state->c);
       break;
     case 0xba:
@@ -1123,7 +1138,7 @@ void Emulate8080p(State8080* state) {
 
       state->cc.z = (state->w == state->d);
       state->cc.s = (state->w & !0x7f != 0);
-      state->cc.p = parity (state->w, 0xff);
+      state->cc.p = parity(state->w, 0xff);
       state->cc.cy = (state->w < state->d);
       break;
     case 0xbb:
@@ -1131,7 +1146,7 @@ void Emulate8080p(State8080* state) {
 
       state->cc.z = (state->w == state->e);
       state->cc.s = (state->w & !0x7f != 0);
-      state->cc.p = parity (state->w, 0xff);
+      state->cc.p = parity(state->w, 0xff);
       state->cc.cy = (state->w < state->e);
       break;
     case 0xbc:
@@ -1139,7 +1154,7 @@ void Emulate8080p(State8080* state) {
 
       state->cc.z = (state->w == state->h);
       state->cc.s = (state->w & !0x7f != 0);
-      state->cc.p = parity (state->w, 0xff);
+      state->cc.p = parity(state->w, 0xff);
       state->cc.cy = (state->w < state->h);
       break;
     case 0xbd:
@@ -1147,42 +1162,61 @@ void Emulate8080p(State8080* state) {
 
       state->cc.z = (state->w == state->l);
       state->cc.s = (state->w & !0x7f != 0);
-      state->cc.p = parity (state->w, 0xff);
+      state->cc.p = parity(state->w, 0xff);
       state->cc.cy = (state->w < state->l);
       break;
     case 0xbe:
-      state->w = (uint16_t)state->a - (uint16_t)state->memory[(state->h << 8) | state->l];
+      state->w = (uint16_t)state->a -
+                 (uint16_t)state->memory[(state->h << 8) | state->l];
 
       state->cc.z = (state->w == state->b);
       state->cc.s = (state->w & !0x7f != 0);
-      state->cc.p = parity (state->w, 0xff);
-      state->cc.cy = (state->w < state->b);;
+      state->cc.p = parity(state->w, 0xff);
+      state->cc.cy = (state->w < state->b);
+      ;
       break;
     case 0xbf:
       state->w = (uint16_t)state->a - (uint16_t)state->a;
 
       state->cc.z = (state->w == state->a);
       state->cc.s = (state->w & !0x7f != 0);
-      state->cc.p = parity (state->w, 0xff);
+      state->cc.p = parity(state->w, 0xff);
       state->cc.cy = (state->w < state->a);
       break;
     case 0xc0:
-      UnimplementedInstruction(state);
+      if (state->cc.z == 0) {
+        state->pc = state->memory[state->sp];
+        state->pc = (state->memory[state->sp + 1] << 8);
+        state->sp += 2;
+      }
       break;
     case 0xc1:
-      UnimplementedInstruction(state);
+      state->b = state->memory[state->sp];
+      state->c = state->memory[state->sp + 1];
+      state->sp += 2;
       break;
     case 0xc2:
-      UnimplementedInstruction(state);
+      if (state->cc.z == 0) {
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xc3:
       state->pc = (opcode[2] << 8) | opcode[1];
       break;
     case 0xc4:
-      UnimplementedInstruction(state);
+      if (state->cc.z == 0) {
+        state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+        state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+        state->sp -= 2;
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xc5:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = state->b;
+      state->memory[state->sp - 2] = state->c;
+      state->sp -= 2;
       break;
     case 0xc6:
       state->w = (uint16_t)state->a + (uint16_t)opcode[1];
@@ -1196,33 +1230,52 @@ void Emulate8080p(State8080* state) {
       state->pc++;
       break;
     case 0xc7:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+      state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+      state->sp -= 2;
+      state->pc = state->memory[8 * 0];
       break;
     case 0xc8:
-      UnimplementedInstruction(state);
+      if (state->cc.z == 1) {
+        state->pc = state->memory[state->sp];
+        state->pc = (state->memory[state->sp + 1] << 8);
+        state->sp += 2;
+      }
       break;
     case 0xc9:
-      UnimplementedInstruction(state);
+      state->pc = state->memory[state->sp];
+      state->pc = (state->memory[state->sp + 1] << 8);
+      state->sp += 2;
       break;
     case 0xca:
-      UnimplementedInstruction(state);
+      if (state->cc.z == 1) {
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xcb:
-      UnimplementedInstruction(state);
       break;
     case 0xcc:
-      UnimplementedInstruction(state);
+      if (state->cc.z == 1) {
+        state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+        state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+        state->sp -= 2;
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xcd:
-      state->memory[state->sp - 1] = (state->pc + 1 >> 8);  // 18dc >> 8 = 0018
+      state->memory[state->sp - 1] =
+          ((state->pc + 1) >> 8);  // 18dc >> 8 = 0018
       state->memory[state->sp - 2] =
-          (state->pc + 1 & 0x00ff);  // 18dc & 0x00ff = 00dc
+          ((state->pc + 1) & 0x00ff);  // 18dc & 0x00ff = 00dc
       state->sp -= 2;
       state->pc =
           (opcode[2] << 8) | opcode[1];  // 19 << 8 = 1900; 1900 | 56 = 1956
       break;
     case 0xce:
-      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)opcode[1];
+      state->w =
+          (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)opcode[1];
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -1233,25 +1286,44 @@ void Emulate8080p(State8080* state) {
       state->pc++;
       break;
     case 0xcf:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+      state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+      state->sp -= 2;
+      state->pc = state->memory[8 * 1];
       break;
     case 0xd0:
-      UnimplementedInstruction(state);
+      if (state->cc.cy == 0) {
+        state->pc = state->memory[state->sp];
+        state->pc = (state->memory[state->sp + 1] << 8);
+        state->sp += 2;
+      }
       break;
     case 0xd1:
-      UnimplementedInstruction(state);
+      state->d = state->memory[state->sp];
+      state->e = state->memory[state->sp + 1];
+      state->sp += 2;
       break;
     case 0xd2:
-      UnimplementedInstruction(state);
+      if (state->cc.cy == 0) {
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xd3:
-      UnimplementedInstruction(state);
       break;
     case 0xd4:
-      UnimplementedInstruction(state);
+      if (state->cc.cy == 0) {
+        state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+        state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+        state->sp -= 2;
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xd5:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = state->d;
+      state->memory[state->sp - 2] = state->e;
+      state->sp -= 2;
       break;
     case 0xd6:
       state->w = (uint16_t)state->a - (uint16_t)opcode[1];
@@ -1265,28 +1337,42 @@ void Emulate8080p(State8080* state) {
       state->pc++;
       break;
     case 0xd7:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+      state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+      state->sp -= 2;
+      state->pc = state->memory[8 * 2];
       break;
     case 0xd8:
-      UnimplementedInstruction(state);
+      if (state->cc.cy == 1) {
+        state->pc = state->memory[state->sp];
+        state->pc = (state->memory[state->sp + 1] << 8);
+        state->sp += 2;
+      }
       break;
     case 0xd9:
-      UnimplementedInstruction(state);
       break;
     case 0xda:
-      UnimplementedInstruction(state);
+      if (state->cc.cy == 1) {
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xdb:
-      UnimplementedInstruction(state);
       break;
     case 0xdc:
-      UnimplementedInstruction(state);
+      if (state->cc.cy == 1) {
+        state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+        state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+        state->sp -= 2;
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xdd:
-      UnimplementedInstruction(state);
       break;
     case 0xde:
-      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)opcode[1];
+      state->w =
+          (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)opcode[1];
 
       state->cc.z = ((state->w & 0xff) == 0);
       state->cc.s = ((state->w & !0x7f) != 0);
@@ -1297,25 +1383,52 @@ void Emulate8080p(State8080* state) {
       state->pc++;
       break;
     case 0xdf:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+      state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+      state->sp -= 2;
+      state->pc = state->memory[8 * 3];
       break;
     case 0xe0:
-      UnimplementedInstruction(state);
+      if (state->cc.p == 0) {
+        state->pc = state->memory[state->sp];
+        state->pc = (state->memory[state->sp + 1] << 8);
+        state->sp += 2;
+      }
       break;
     case 0xe1:
-      UnimplementedInstruction(state);
+      state->h = state->memory[state->sp];
+      state->l = state->memory[state->sp + 1];
+      state->sp += 2;
       break;
     case 0xe2:
-      UnimplementedInstruction(state);
+      if (state->cc.p == 0) {
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xe3:
-      UnimplementedInstruction(state);
+      state->w = state->h << 8;
+      state->w += state->l;
+
+      state->l = state->memory[state->sp];
+      state->h = state->memory[state->sp + 1];
+
+      state->memory[state->sp] = state->w & 0xff;
+      state->memory[state->sp + 1] = (state->w >> 8) & 0xff;
       break;
     case 0xe4:
-      UnimplementedInstruction(state);
+      if (state->cc.p == 0) {
+        state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+        state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+        state->sp -= 2;
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xe5:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = state->h;
+      state->memory[state->sp - 2] = state->l;
+      state->sp -= 2;
       break;
     case 0xe6:
       state->a &= opcode[1];
@@ -1323,22 +1436,33 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
 
       state->pc++;
       break;
     case 0xe7:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+      state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+      state->sp -= 2;
+      state->pc = state->memory[8 * 4];
       break;
     case 0xe8:
-      UnimplementedInstruction(state);
+      if (state->cc.p == 1) {
+        state->pc = state->memory[state->sp];
+        state->pc = (state->memory[state->sp + 1] << 8);
+        state->sp += 2;
+      }
       break;
     case 0xe9:
-      UnimplementedInstruction(state);
+      state->pc = state->h << 8;
+      state->pc += state->l;
       break;
     case 0xea:
-      UnimplementedInstruction(state);
+      if (state->cc.p == 1) {
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xeb:
       state->w = state->h;
@@ -1349,10 +1473,15 @@ void Emulate8080p(State8080* state) {
       state->e = state->w;
       break;
     case 0xec:
-      UnimplementedInstruction(state);
+      if (state->cc.p == 1) {
+        state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+        state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+        state->sp -= 2;
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xed:
-      UnimplementedInstruction(state);
       break;
     case 0xee:
       state->a ^= opcode[1];
@@ -1360,31 +1489,65 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
 
       state->pc++;
       break;
     case 0xef:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+      state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+      state->sp -= 2;
+      state->pc = state->memory[8 * 5];
       break;
     case 0xf0:
-      UnimplementedInstruction(state);
+      if (state->cc.s == 0) {
+        state->pc = state->memory[state->sp];
+        state->pc = (state->memory[state->sp + 1] << 8);
+        state->sp += 2;
+      }
       break;
     case 0xf1:
-      UnimplementedInstruction(state);
+      state->cc.cy = state->memory[state->sp] & 0x01;
+      state->cc.p = state->memory[state->sp] & 0x04;
+      state->cc.ac = state->memory[state->sp] & 0x10;
+      state->cc.z = state->memory[state->sp] & 0x40;
+      state->cc.s = state->memory[state->sp] & 0x80;
+
+      state->a = state->memory[state->sp + 1];
+      state->sp += 2;
       break;
     case 0xf2:
-      UnimplementedInstruction(state);
+      if (state->cc.s == 0) {
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xf3:
-      UnimplementedInstruction(state);
+      state->int_enable = 0;
       break;
     case 0xf4:
-      UnimplementedInstruction(state);
+      if (state->cc.s == 0) {
+        state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+        state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+        state->sp -= 2;
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xf5:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = state->a;
+
+      state->memory[state->sp - 2] = state->cc.cy;
+      state->memory[state->sp - 2] += state->cc.p << 2;
+      state->memory[state->sp - 2] += state->cc.ac << 4;
+      state->memory[state->sp - 2] += state->cc.z << 6;
+      state->memory[state->sp - 2] += 1 << 1;
+      state->memory[state->sp - 2] += 0 << 3;
+      state->memory[state->sp - 2] += 0 << 5;
+      state->memory[state->sp - 2] += state->cc.s << 7;
+
+      state->sp -= 2;
       break;
     case 0xf6:
       state->a |= opcode[1];
@@ -1392,48 +1555,65 @@ void Emulate8080p(State8080* state) {
       state->cc.z = (state->a == 0);
       state->cc.s = (state->a & !0x7f != 0);
       state->cc.cy = 0;
-      state->cc.p = parity (state->a, 8);
+      state->cc.p = parity(state->a, 8);
       state->cc.ac = 0;
 
       state->pc++;
       break;
     case 0xf7:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+      state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+      state->sp -= 2;
+      state->pc = state->memory[8 * 6];
       break;
     case 0xf8:
-      UnimplementedInstruction(state);
+      if (state->cc.s == 1) {
+        state->pc = state->memory[state->sp];
+        state->pc = (state->memory[state->sp + 1] << 8);
+        state->sp += 2;
+      }
       break;
     case 0xf9:
-      UnimplementedInstruction(state);
+      state->sp = state->h << 8;
+      state->sp += state->l;
       break;
     case 0xfa:
-      UnimplementedInstruction(state);
+      if (state->cc.s == 1) {
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xfb:
-      UnimplementedInstruction(state);
+      state->int_enable = 1;
       break;
     case 0xfc:
-      UnimplementedInstruction(state);
+      if (state->cc.s == 0) {
+        state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+        state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+        state->sp -= 2;
+        state->pc = (opcode[2] << 8) | opcode[1];
+      }
+      state->pc += 2;
       break;
     case 0xfd:
-      UnimplementedInstruction(state);
       break;
     case 0xfe:
       state->w = (uint16_t)state->a - (uint16_t)opcode[1];
 
       state->cc.z = (state->w == opcode[1]);
       state->cc.s = (state->w & !0x7f != 0);
-      state->cc.p = parity (state->w, 0xff);
+      state->cc.p = parity(state->w, 0xff);
       state->cc.cy = (state->w < opcode[1]);
 
       state->pc++;
       break;
     case 0xff:
-      UnimplementedInstruction(state);
+      state->memory[state->sp - 1] = ((state->pc + 1) >> 8);
+      state->memory[state->sp - 2] = ((state->pc + 1) & 0x00ff);
+      state->sp -= 2;
+      state->pc = state->memory[8 * 7];
       break;
   }
-
-  printf("%02x\n", *opcode);
   state->pc += 1;
 }
 
