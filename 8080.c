@@ -60,45 +60,79 @@ void Emulate8080p(State8080* state) {
       state->memory[(state->b << 8) | state->c] = state->a;
       break;
     case 0x03:
-      UnimplementedInstruction(state);
+      state->b++;
+      state->c++;
       break;
     case 0x04:
-      UnimplementedInstruction(state);
+      state->b++;
+
+      state->cc.z = ((state->b & 0xff) == 0);
+      state->cc.s = ((state->b & !0x7f) != 0);
+      state->cc.p = parity(state->b, 0xff);
       break;
     case 0x05:
-      UnimplementedInstruction(state);
+      state->b--;
+
+      state->cc.z = ((state->b & 0xff) == 0);
+      state->cc.s = ((state->b & !0x7f) != 0);
+      state->cc.p = parity(state->b, 0xff);
       break;
     case 0x06:
       state->b = opcode[1];
       state->pc++;
       break;
     case 0x07:
-      UnimplementedInstruction(state);
+      state->w = state->a;
+      state->w <<= 1;
+      state->w += (state->w > 0xff);
+      state->a = state->w & 0xff;
+
+      state->cc.cy = (state->w > 0xff);
       break;
     case 0x08:
       UnimplementedInstruction(state);
       break;
     case 0x09:
-      UnimplementedInstruction(state);
+      uint32_t result = (uint32_t)((state->h << 8) + state->l) + (uint32_t)((state->b << 8) + state->c);
+
+      state->cc.cy = (result > 0xffff);
+
+      state->h = (result & 0xff00) >> 8;
+      state->l = (result & 0xff);
       break;
     case 0x0a:
       state->a = state->memory[(state->b << 8) | state->c];
       break;
     case 0x0b:
-      UnimplementedInstruction(state);
+      state->b--;
+      state->c--;
       break;
     case 0x0c:
-      UnimplementedInstruction(state);
+      state->c++;
+
+      state->cc.z = ((state->c & 0xff) == 0);
+      state->cc.s = ((state->c & !0x7f) != 0);
+      state->cc.p = parity(state->c, 0xff);
       break;
     case 0x0d:
-      UnimplementedInstruction(state);
+      state->c--;
+
+      state->cc.z = ((state->c & 0xff) == 0);
+      state->cc.s = ((state->c & !0x7f) != 0);
+      state->cc.p = parity(state->c, 0xff);
       break;
     case 0x0e:
       state->c = opcode[1];
       state->pc++;
       break;
     case 0x0f:
-      UnimplementedInstruction(state);
+      state->w = state->a << 8;
+      state->w >>= 1;
+      state->w += ((state->w & 0xff) << 8);
+      state->w >>= 8;
+      state->a = state->w & 0xff;
+
+      state->cc.cy = (state->w & 0xff == 1);
       break;
     case 0x10:
       UnimplementedInstruction(state);
@@ -112,45 +146,79 @@ void Emulate8080p(State8080* state) {
       state->memory[(state->d << 8) | state->e] = state->a;
       break;
     case 0x13:
-      UnimplementedInstruction(state);
+      state->d++;
+      state->e++;
       break;
     case 0x14:
-      UnimplementedInstruction(state);
+      state->d++;
+
+      state->cc.z = ((state->d & 0xff) == 0);
+      state->cc.s = ((state->d & !0x7f) != 0);
+      state->cc.p = parity(state->d, 0xff);
       break;
     case 0x15:
-      UnimplementedInstruction(state);
+      state->d--;
+
+      state->cc.z = ((state->d & 0xff) == 0);
+      state->cc.s = ((state->d & !0x7f) != 0);
+      state->cc.p = parity(state->d, 0xff);
       break;
     case 0x16:
       state->d = opcode[1];
       state->pc++;
       break;
     case 0x17:
-      UnimplementedInstruction(state);
+      state->w = state->a;
+      state->w <<= 1;
+      state->w += (state->cc.cy);
+      state->a = state->w & 0xff;
+
+      state->cc.cy = (state->w > 0xff);
       break;
     case 0x18:
       UnimplementedInstruction(state);
       break;
     case 0x19:
-      UnimplementedInstruction(state);
+      uint32_t result = (uint32_t)((state->h << 8) + state->l) + (uint32_t)((state->d << 8) + state->e);
+
+      state->cc.cy = (result > 0xffff);
+
+      state->h = (result & 0xff00) >> 8;
+      state->l = (result & 0xff);
       break;
     case 0x1a:
       state->a = state->memory[(state->b << 8) | state->c];
       break;
     case 0x1b:
-      UnimplementedInstruction(state);
+      state->d--;
+      state->e--;
       break;
     case 0x1c:
-      UnimplementedInstruction(state);
+      state->e++;
+
+      state->cc.z = ((state->e & 0xff) == 0);
+      state->cc.s = ((state->e & !0x7f) != 0);
+      state->cc.p = parity(state->e, 0xff);
       break;
     case 0x1d:
-      UnimplementedInstruction(state);
+      state->e--;
+
+      state->cc.z = ((state->e & 0xff) == 0);
+      state->cc.s = ((state->e & !0x7f) != 0);
+      state->cc.p = parity(state->e, 0xff);
       break;
     case 0x1e:
       state->e = opcode[1];
       state->pc++;
       break;
     case 0x1f:
-      UnimplementedInstruction(state);
+      state->w = state->a << 8;
+      state->w >>= 1;
+      state->w += (state->cc.cy << 15);
+      state->w >>= 8;
+      state->a = state->w & 0xff;
+
+      state->cc.cy = (state->w & 0xff == 1);
       break;
     case 0x20:
       UnimplementedInstruction(state);
@@ -166,26 +234,49 @@ void Emulate8080p(State8080* state) {
       state->pc+=2;
       break;
     case 0x23:
-      UnimplementedInstruction(state);
+      state->h++;
+      state->l++;
       break;
     case 0x24:
-      UnimplementedInstruction(state);
+      state->h++;
+
+      state->cc.z = ((state->h & 0xff) == 0);
+      state->cc.s = ((state->h & !0x7f) != 0);
+      state->cc.p = parity(state->h, 0xff);
       break;
     case 0x25:
-      UnimplementedInstruction(state);
+      state->h--;
+
+      state->cc.z = ((state->h & 0xff) == 0);
+      state->cc.s = ((state->h & !0x7f) != 0);
+      state->cc.p = parity(state->h, 0xff);
       break;
     case 0x26:
       state->h = opcode[1];
       state->pc++;
       break;
     case 0x27:
-      UnimplementedInstruction(state);
+      state->w = state->a;
+      if(state->w & 0x0f > 9 || state->cc.ac) state->w += 6;
+      if(state->w >> 4 & 0x0f > 9 || state->cc.cy) state->w += 6 << 4;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x28:
       UnimplementedInstruction(state);
       break;
     case 0x29:
-      UnimplementedInstruction(state);
+      uint32_t result = (uint32_t)((state->h << 8) + state->l) + (uint32_t)((state->h << 8) + state->l);
+
+      state->cc.cy = (result > 0xffff);
+
+      state->h = (result & 0xff00) >> 8;
+      state->l = (result & 0xff);
       break;
     case 0x2a:
       state->l = state->memory[(opcode[2] << 8) | opcode[1]];
@@ -193,20 +284,29 @@ void Emulate8080p(State8080* state) {
       state->pc+=2;
       break;
     case 0x2b:
-      UnimplementedInstruction(state);
+      state->h--;
+      state->l--;
       break;
     case 0x2c:
-      UnimplementedInstruction(state);
+      state->l++;
+
+      state->cc.z = ((state->l & 0xff) == 0);
+      state->cc.s = ((state->l & !0x7f) != 0);
+      state->cc.p = parity(state->l, 0xff);
       break;
     case 0x2d:
-      UnimplementedInstruction(state);
+      state->l--;
+
+      state->cc.z = ((state->l & 0xff) == 0);
+      state->cc.s = ((state->l & !0x7f) != 0);
+      state->cc.p = parity(state->l, 0xff);
       break;
     case 0x2e:
       state->l = opcode[1];
       state->pc++;
       break;
     case 0x2f:
-      UnimplementedInstruction(state);
+      state->a = ~state->a;
       break;
     case 0x30:
       UnimplementedInstruction(state);
@@ -220,46 +320,67 @@ void Emulate8080p(State8080* state) {
       state->pc+=2;
       break;
     case 0x33:
-      UnimplementedInstruction(state);
+      state->sp++;
       break;
     case 0x34:
-      UnimplementedInstruction(state);
+      state->memory[(state->h << 8) | state->l]++;
+
+      state->cc.z = ((state->memory[(state->h << 8) | state->l] & 0xff) == 0);
+      state->cc.s = ((state->memory[(state->h << 8) | state->l] & !0x7f) != 0);
+      state->cc.p = parity(state->memory[(state->h << 8) | state->l], 0xff);
       break;
     case 0x35:
-      UnimplementedInstruction(state);
+      state->memory[(state->h << 8) | state->l]--;
+
+      state->cc.z = ((state->memory[(state->h << 8) | state->l] & 0xff) == 0);
+      state->cc.s = ((state->memory[(state->h << 8) | state->l] & !0x7f) != 0);
+      state->cc.p = parity(state->memory[(state->h << 8) | state->l], 0xff);
       break;
     case 0x36:
       *state->memory = opcode[1];
       state->pc++;
       break;
     case 0x37:
-      UnimplementedInstruction(state);
+      state->cc.cy = 1;
       break;
     case 0x38:
       UnimplementedInstruction(state);
       break;
     case 0x39:
-      UnimplementedInstruction(state);
+      uint32_t result = (uint32_t)((state->h << 8) + state->l) + (uint32_t)state->sp;
+
+      state->cc.cy = (result > 0xffff);
+
+      state->h = (result & 0xff00) >> 8;
+      state->l = (result & 0xff);
       break;
     case 0x3a:
       state->a = state->memory[(opcode[2] << 8) | opcode[1]];
       state->pc+=2;
       break;
     case 0x3b:
-      UnimplementedInstruction(state);
+      state->sp--;
       break;
     case 0x3c:
-      UnimplementedInstruction(state);
+      state->a++;
+
+      state->cc.z = ((state->a & 0xff) == 0);
+      state->cc.s = ((state->a & !0x7f) != 0);
+      state->cc.p = parity(state->a, 0xff);
       break;
     case 0x3d:
-      UnimplementedInstruction(state);
+      state->a--;
+
+      state->cc.z = ((state->a & 0xff) == 0);
+      state->cc.s = ((state->a & !0x7f) != 0);
+      state->cc.p = parity(state->a, 0xff);
       break;
     case 0x3e:
       state->a = opcode[1];
       state->pc++;
       break;
     case 0x3f:
-      UnimplementedInstruction(state);
+      state->cc.cy = ~state->cc.cy;
       break;
     case 0x40:
       state->b = state->b;
@@ -456,8 +577,8 @@ void Emulate8080p(State8080* state) {
     case 0x80:
       state->w = (uint16_t)state->a + (uint16_t)state->b;
 
-      state->cc.z = (state->w & 0xff);
-      state->cc.s = (state->w & !0x7f);
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
       state->cc.cy = (state->w > 0xff);
       state->cc.p = parity(state->w, 0xff);
 
@@ -466,8 +587,8 @@ void Emulate8080p(State8080* state) {
     case 0x81:
       state->w = (uint16_t)state->a + (uint16_t)state->c;
 
-      state->cc.z = (state->w & 0xff);
-      state->cc.s = (state->w & !0x7f);
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
       state->cc.cy = (state->w > 0xff);
       state->cc.p = parity(state->w, 0xff);
 
@@ -476,8 +597,8 @@ void Emulate8080p(State8080* state) {
     case 0x82:
       state->w = (uint16_t)state->a + (uint16_t)state->d;
 
-      state->cc.z = (state->w & 0xff);
-      state->cc.s = (state->w & !0x7f);
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
       state->cc.cy = (state->w > 0xff);
       state->cc.p = parity(state->w, 0xff);
 
@@ -486,8 +607,8 @@ void Emulate8080p(State8080* state) {
     case 0x83:
       state->w = (uint16_t)state->a + (uint16_t)state->e;
 
-      state->cc.z = (state->w & 0xff);
-      state->cc.s = (state->w & !0x7f);
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
       state->cc.cy = (state->w > 0xff);
       state->cc.p = parity(state->w, 0xff);
 
@@ -496,8 +617,8 @@ void Emulate8080p(State8080* state) {
     case 0x84:
       state->w = (uint16_t)state->a + (uint16_t)state->h;
 
-      state->cc.z = (state->w & 0xff);
-      state->cc.s = (state->w & !0x7f);
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
       state->cc.cy = (state->w > 0xff);
       state->cc.p = parity(state->w, 0xff);
 
@@ -506,8 +627,8 @@ void Emulate8080p(State8080* state) {
     case 0x85:
       state->w = (uint16_t)state->a + (uint16_t)state->l;
 
-      state->cc.z = (state->w & 0xff);
-      state->cc.s = (state->w & !0x7f);
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
       state->cc.cy = (state->w > 0xff);
       state->cc.p = parity(state->w, 0xff);
 
@@ -516,8 +637,8 @@ void Emulate8080p(State8080* state) {
     case 0x86:
       state->w = (uint16_t)state->a + (uint16_t)state->memory[(state->h << 8) | state->l];
 
-      state->cc.z = (state->w & 0xff);
-      state->cc.s = (state->w & !0x7f);
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
       state->cc.cy = (state->w > 0xff);
       state->cc.p = parity(state->w, 0xff);
 
@@ -526,180 +647,524 @@ void Emulate8080p(State8080* state) {
     case 0x87:
       state->w = (uint16_t)state->a + (uint16_t)state->a;
 
-      state->cc.z = (state->w & 0xff);
-      state->cc.s = (state->w & !0x7f);
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
       state->cc.cy = (state->w > 0xff);
       state->cc.p = parity(state->w, 0xff);
 
       state->a = state->w & 0xff;
       break;
     case 0x88:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->b;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x89:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->c;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x8a:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->d;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x8b:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->e;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x8c:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->h;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x8d:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->l;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x8e:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->memory[(state->h << 8) | state->l];
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x8f:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)state->a;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x90:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->b;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x91:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->c;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x92:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->d;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x93:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->e;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x94:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->h;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x95:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->l;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x96:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->memory[(state->h << 8) | state->l];
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x97:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->a;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x98:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->b;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x99:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->c;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x9a:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->d;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x9b:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->e;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x9c:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->h;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x9d:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->l;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x9e:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->memory[(state->h << 8) | state->l];
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0x9f:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)state->a;
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
       break;
     case 0xa0:
-      UnimplementedInstruction(state);
+      state->a &= state->b;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
       break;
     case 0xa1:
-      UnimplementedInstruction(state);
+      state->a &= state->c;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
       break;
     case 0xa2:
-      UnimplementedInstruction(state);
+      state->a &= state->d;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
       break;
     case 0xa3:
-      UnimplementedInstruction(state);
+      state->a &= state->e;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
       break;
     case 0xa4:
-      UnimplementedInstruction(state);
+      state->a &= state->h;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
       break;
     case 0xa5:
-      UnimplementedInstruction(state);
+      state->a &= state->l;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
       break;
     case 0xa6:
-      UnimplementedInstruction(state);
+      state->a &= state->memory[(state->h << 8) | state->l];
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
       break;
     case 0xa7:
-      UnimplementedInstruction(state);
+      state->a &= state->a;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
       break;
     case 0xa8:
-      UnimplementedInstruction(state);
+      state->a ^= state->b;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xa9:
-      UnimplementedInstruction(state);
+      state->a ^= state->c;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xaa:
-      UnimplementedInstruction(state);
+      state->a ^= state->d;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xab:
-      UnimplementedInstruction(state);
+      state->a ^= state->e;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xac:
-      UnimplementedInstruction(state);
+      state->a ^= state->h;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xad:
-      UnimplementedInstruction(state);
+      state->a ^= state->l;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xae:
-      UnimplementedInstruction(state);
+      state->a ^= state->memory[(state->h << 8) | state->l];
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xaf:
-      UnimplementedInstruction(state);
+      state->a ^= state->a;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xb0:
-      UnimplementedInstruction(state);
+      state->a |= state->b;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xb1:
-      UnimplementedInstruction(state);
+      state->a |= state->c;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xb2:
-      UnimplementedInstruction(state);
+      state->a |= state->d;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xb3:
-      UnimplementedInstruction(state);
+      state->a |= state->e;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xb4:
-      UnimplementedInstruction(state);
+      state->a |= state->h;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xb5:
-      UnimplementedInstruction(state);
+      state->a |= state->l;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xb6:
-      UnimplementedInstruction(state);
+      state->a |= state->memory[(state->h << 8) | state->l];
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xb7:
-      UnimplementedInstruction(state);
+      state->a |= state->a;
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
       break;
     case 0xb8:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->b;
+
+      state->cc.z = (state->w == state->b);
+      state->cc.s = (state->w & !0x7f != 0);
+      state->cc.p = parity (state->w, 0xff);
+      state->cc.cy = (state->w < state->b);
       break;
     case 0xb9:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->c;
+
+      state->cc.z = (state->w == state->c);
+      state->cc.s = (state->w & !0x7f != 0);
+      state->cc.p = parity (state->w, 0xff);
+      state->cc.cy = (state->w < state->c);
       break;
     case 0xba:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->d;
+
+      state->cc.z = (state->w == state->d);
+      state->cc.s = (state->w & !0x7f != 0);
+      state->cc.p = parity (state->w, 0xff);
+      state->cc.cy = (state->w < state->d);
       break;
     case 0xbb:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->e;
+
+      state->cc.z = (state->w == state->e);
+      state->cc.s = (state->w & !0x7f != 0);
+      state->cc.p = parity (state->w, 0xff);
+      state->cc.cy = (state->w < state->e);
       break;
     case 0xbc:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->h;
+
+      state->cc.z = (state->w == state->h);
+      state->cc.s = (state->w & !0x7f != 0);
+      state->cc.p = parity (state->w, 0xff);
+      state->cc.cy = (state->w < state->h);
       break;
     case 0xbd:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->l;
+
+      state->cc.z = (state->w == state->l);
+      state->cc.s = (state->w & !0x7f != 0);
+      state->cc.p = parity (state->w, 0xff);
+      state->cc.cy = (state->w < state->l);
       break;
     case 0xbe:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->memory[(state->h << 8) | state->l];
+
+      state->cc.z = (state->w == state->b);
+      state->cc.s = (state->w & !0x7f != 0);
+      state->cc.p = parity (state->w, 0xff);
+      state->cc.cy = (state->w < state->b);;
       break;
     case 0xbf:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->a;
+
+      state->cc.z = (state->w == state->a);
+      state->cc.s = (state->w & !0x7f != 0);
+      state->cc.p = parity (state->w, 0xff);
+      state->cc.cy = (state->w < state->a);
       break;
     case 0xc0:
       UnimplementedInstruction(state);
@@ -720,7 +1185,15 @@ void Emulate8080p(State8080* state) {
       UnimplementedInstruction(state);
       break;
     case 0xc6:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a + (uint16_t)opcode[1];
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
+      state->pc++;
       break;
     case 0xc7:
       UnimplementedInstruction(state);
@@ -749,7 +1222,15 @@ void Emulate8080p(State8080* state) {
           (opcode[2] << 8) | opcode[1];  // 19 << 8 = 1900; 1900 | 56 = 1956
       break;
     case 0xce:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a + (uint16_t)state->cc.cy + (uint16_t)opcode[1];
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
+      state->pc++;
       break;
     case 0xcf:
       UnimplementedInstruction(state);
@@ -773,7 +1254,15 @@ void Emulate8080p(State8080* state) {
       UnimplementedInstruction(state);
       break;
     case 0xd6:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)opcode[1];
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
+      state->pc++;
       break;
     case 0xd7:
       UnimplementedInstruction(state);
@@ -797,7 +1286,15 @@ void Emulate8080p(State8080* state) {
       UnimplementedInstruction(state);
       break;
     case 0xde:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)state->cc.cy - (uint16_t)opcode[1];
+
+      state->cc.z = ((state->w & 0xff) == 0);
+      state->cc.s = ((state->w & !0x7f) != 0);
+      state->cc.cy = (state->w > 0xff);
+      state->cc.p = parity(state->w, 0xff);
+
+      state->a = state->w & 0xff;
+      state->pc++;
       break;
     case 0xdf:
       UnimplementedInstruction(state);
@@ -821,7 +1318,15 @@ void Emulate8080p(State8080* state) {
       UnimplementedInstruction(state);
       break;
     case 0xe6:
-      UnimplementedInstruction(state);
+      state->a &= opcode[1];
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
+
+      state->pc++;
       break;
     case 0xe7:
       UnimplementedInstruction(state);
@@ -850,7 +1355,15 @@ void Emulate8080p(State8080* state) {
       UnimplementedInstruction(state);
       break;
     case 0xee:
-      UnimplementedInstruction(state);
+      state->a ^= opcode[1];
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
+
+      state->pc++;
       break;
     case 0xef:
       UnimplementedInstruction(state);
@@ -874,7 +1387,15 @@ void Emulate8080p(State8080* state) {
       UnimplementedInstruction(state);
       break;
     case 0xf6:
-      UnimplementedInstruction(state);
+      state->a |= opcode[1];
+
+      state->cc.z = (state->a == 0);
+      state->cc.s = (state->a & !0x7f != 0);
+      state->cc.cy = 0;
+      state->cc.p = parity (state->a, 8);
+      state->cc.ac = 0;
+
+      state->pc++;
       break;
     case 0xf7:
       UnimplementedInstruction(state);
@@ -898,7 +1419,14 @@ void Emulate8080p(State8080* state) {
       UnimplementedInstruction(state);
       break;
     case 0xfe:
-      UnimplementedInstruction(state);
+      state->w = (uint16_t)state->a - (uint16_t)opcode[1];
+
+      state->cc.z = (state->w == opcode[1]);
+      state->cc.s = (state->w & !0x7f != 0);
+      state->cc.p = parity (state->w, 0xff);
+      state->cc.cy = (state->w < opcode[1]);
+
+      state->pc++;
       break;
     case 0xff:
       UnimplementedInstruction(state);
